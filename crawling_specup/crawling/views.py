@@ -32,8 +32,6 @@ def data_list(request):
     }
     data_list = []
 
-    # input_date = re.compile(year[2:4] + '.' + month + '.' + day + '.')    # 선택된 날짜 데이터 추출을 위한 정규표현식
-    # today_match = input_date.match(custom_today)        # 선택된 날짜와 오늘 날짜의 일치여부 확인
     if(input_date == custom_today):     # 오늘 날짜를 검색했을 경우
         while(True):
             search_page += 1
@@ -44,30 +42,39 @@ def data_list(request):
                 write_date = tag.find(class_='time').text
                 if len(write_date) == 5:    # 오늘 날짜 데이터
                     data_dict = {}
-                    data_dict['title'] = tag.find("strong", class_='tit').text.strip()
+                    title = tag.find("strong", class_='tit').text.strip()
+                    data_dict['title'] = title
                     data_dict['writer'] = tag.find(class_='ellip').text
+
                     try:
                         article_url = urljoin(list_url, tag.find('a')['href'])
                         data_dict['article_url'] = article_url
                         article_soup = browser.open(article_url).soup
-
-
+                        try:
+                            compile_title = re.compile('^.*[★|\[](.*)[★|\]].*$')
+                            match_company = compile_title.match(title)
+                            company_name = match_company.group(1)
+                        except (AttributeError, IndexError) as err:          # 'NoneType' object has no attribute 'group' 에러 체크
+                            print('CompanyError: {0}'.format(err))
+                            company_name = ''
                         try:
                             date = article_soup.select('div.NHN_Writeform_Main div > span > b > span')[0].text
-                            compile_date = re.compile('^(.*)([~])\s(.*)$')
+                            print(title, '--------정규표현식 거치면 : ', company_name, date)
+                            compile_date = re.compile('^(.*)[~]\s(.*)$')
                             match_date = compile_date.match(date)
                             start_date = match_date.group(1)
-                            end_date = match_date.group(3)
+                            end_date = match_date.group(2)
                         except (AttributeError, IndexError) as err:          # 'NoneType' object has no attribute 'group' 에러 체크
-                            print('error: {0}'.format(err))
+                            print('DateError: {0}'.format(err))
                             start_date = ''
                             end_date = ''
                         
+                        data_dict['company'] = company_name
                         data_dict['start_date'] = start_date
                         data_dict['end_date'] = end_date
 
                     except TypeError as err:       # 해당 날짜에 검색 결과 없을 때
-                        print('error: {0}'.format(err))
+                        print('TypeError: {0}'.format(err))
 
                     data_list.append(data_dict)
 
