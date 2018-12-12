@@ -43,7 +43,8 @@
                 type: "get",
                 url: "{% url 'crawling:data_list' %}",
                 data: {"year": $('#year').val(), "month": $('#month').val(), "day": $('#day').val(),
-                        "clubid": $('#clubid').val(), "menuid": $('#menuid').val() },
+                        {% comment %} "clubid": 15754634, "menuid": 258 },                   // ~~ 테스트용 페이지 ~~ {% endcomment %}
+                      "clubid": $('#clubid').val(), "menuid": $('#menuid').val() },
                 dataType: "json",
                 success: function(results){
                     $('#listHead').empty();
@@ -55,7 +56,8 @@
                     var strBody = '';
                     $.each(results, function(index, data){
                         strBody += '<tr><td>' + data.title + '</td><td>' + data.writer + '</td><td>' + data.article_url + '</td>' +
-                                 '<td>' + data.company + '</td><td>' + data.start_date + '</td><td>' + data.end_date + '</td></tr>';       
+                                 '<td>' + data.company + '</td><td>' + data.start_date + '</td><td>' + data.end_date + 
+                                 '</td><td>' + data.job_sort + '</td></tr>';       
                               
                     }) // each
 
