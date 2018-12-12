@@ -1,0 +1,7 @@
+Django==1.11
+mechanicalsoup
+requests
+beautifulsoup4
+selenium
+"ipython[notebook]"
+
