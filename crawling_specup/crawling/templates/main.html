@@ -18,8 +18,6 @@
     <![endif]-->
     <script>
         $(document).ready(function(){
-            $('#messages').empty();
-
             $('#menuid').click(function(){
                 $('#menuid').empty();      // 출력 누적 방지
                 if($('#clubid').val()=='15754634'){            // 스펙업 선택시
@@ -38,39 +36,69 @@
             
         }) // document ready 끝
 
+        var ajax_count = 0;
         var dataList = function(){
-            $.ajax({
-                type: "get",
-                url: "{% url 'crawling:data_list' %}",
-                data: {"year": $('#year').val(), "month": $('#month').val(), "day": $('#day').val(),
-                        {% comment %} "clubid": 15754634, "menuid": 258 },                   // ~~ 테스트용 페이지 ~~ {% endcomment %}
-                      "clubid": $('#clubid').val(), "menuid": $('#menuid').val() },
-                dataType: "json",
-                success: function(results){
-                    $('#listHead').empty();
-                    $('#listBody').empty();
-                    var strHead = '<tr><th style="width: 20%;">게시글 제목</th><th style="width: 7%;">작성자</th>' + 
-                                    '<th style="width: 20%;">상세URL</th><th style="width: 10%;">기업명</th>' +
-                                    '<th style="width: 10%;">시작일</th><th style="width: 10%;">마감일</th><th style="width: 10%;">직 무</th>' + 
-                                    '<th style="width: 10%;">고용형태</th><th style="width: 10%;">계약형태</th></tr>';
-                    var strBody = '';
-                    $.each(results, function(index, data){
-                        strBody += '<tr><td>' + data.title + '</td><td>' + data.writer + '</td><td>' + data.article_url + '</td>' +
-                                 '<td>' + data.company + '</td><td>' + data.start_date + '</td><td>' + data.end_date + 
-                                 '</td><td>' + data.job_sort + '</td></tr>';       
-                              
-                    }) // each
+            var year = $('#year').val();
+            var month = $('#month').val();
+            var day = $('#day').val();
+            var menuid = $('#menuid').val();
+            if(year=='' || month=='' || day=='' || menuid==1){  // 모든 값 입력여부 확인
+                alert('모든 값을 입력 바랍니다.');
+            }
+            else{   // 입력 확인되면 크롤링 요청
+                if(ajax_count==0){      // 검색 중복 방지
+                    ajax_count = 1;
+                    $('#search_span').html('&emsp;검색 중입니다. 최대 3분까지 소요될 수 있습니다.');
+                    $('#center_div').empty();
+                    $.ajax({
+                        type: "get",
+                        url: "{% url 'crawling:data_list' %}",
+                        data: {"year": year, "month": month, "day": day,
+                            "clubid": $('#clubid').val(), "menuid": menuid },
+                        dataType: "json",
+                        success: function(results){
+                            $('#listHead').empty();
+                            $('#listBody').empty();
+                            var strHead = '<tr><th style="width: 20%;">게시글 제목</th><th style="width: 7%;">작성자</th>' + 
+                                            '<th style="width: 20%;">상세URL</th><th style="width: 10%;">기업명</th>' +
+                                            '<th style="width: 10%;">시작일</th><th style="width: 10%;">마감일</th><th style="width: 10%;">직 무</th>' + 
+                                            '<th style="width: 10%;">고용형태</th></tr>';
+                            var strBody = '';
 
-                    $('#listHead').append(strHead);
-                    $('#listBody').append(strBody);
+                            $.each(results.data_list, function(index, data){
+                                strBody += '<tr><td>' + data.title + '</td><td>' + data.writer + '</td><td>' + data.article_url + '</td>' +
+                                        '<td>' + data.company + '</td><td>' + data.start_date + '</td><td>' + data.end_date + 
+                                        '</td><td>' + data.job_sort + '</td></tr>';       
+                                    
+                            }) // each
 
-                },   // success
-                error: function(request, status, error){
-                    console.log("code: " + request.status + "\n" +
-                    "message: " + request.responseText + "\n" +
-                    "error: " + error);
-                } // error
-            }) // ajax 끝
+                            if(typeof(results.data_list) == 'undefined'){
+                            $('#center_div').html('검색 결과가 없습니다.')
+                            }
+                            else{
+                            $('#center_div').html(year+'.'+month+'.'+day+'의 검색 결과입니다.')
+                            $('#listHead').append(strHead);
+                            $('#listBody').append(strBody);
+                            }
+                            
+                            setTimeout(function(){
+                            alert(results.msg);
+                            }, 500)
+                            $('#search_span').empty();
+                            ajax_count = 0; // ajax_count값 다시 0으로 설정
+
+                        },   // success
+                        error: function(request, status, error){
+                            console.log("code: " + request.status + "\n" +
+                            "message: " + request.responseText + "\n" +
+                            "error: " + error);
+                        } // error
+                    }) // ajax 끝
+                } // ajax_count 조건문 끝
+                else{
+                    alert('검색 중입니다..')
+                }
+            } // else 끝
         }   // dataList 함수 끝     
 
 
@@ -106,18 +134,19 @@
                 </select> &emsp;&emsp;&emsp;
                 게시판 선택 :
                 <select id="menuid" name='menuid'>
-                    <option>카페를 선택하세요.</option>
+                    <option value = 1>카페를 선택하세요.</option>
                 </select>
                 <hr>
-                <input type="text" id="year">&nbsp;년&emsp;
-                <input type="text" id="month">&nbsp;월&emsp;
-                <input type="text" id="day">&nbsp;일&emsp;&emsp;
-                <a class="btn btn-primary" onclick="dataList()" id="search_button">검 색</a>
+                <input type="text" id="year" placeholder="ex) 2019">&nbsp;년&emsp;
+                <input type="text" id="month" placeholder="ex) 01">&nbsp;월&emsp;
+                <input type="text" id="day" placeholder="ex) 01">&nbsp;일&emsp;&emsp;
+                <a class="btn btn-primary" onclick="dataList()">검 색</a>
+                <span id="search_span"></span>
                 <hr>
             </div>
         </div>
     </div>
-    
+    <div align="center" id="center_div"></div><br>
     <div align="center">
         <table>
             <thead id="listHead">
@@ -125,7 +154,7 @@
             <tbody id="listBody">
             </tbody>
         </table>
-        <ul class="pagination"></ul>
+        {% comment %} <ul class="pagination"></ul> {% endcomment %}
     </div>
 
     <div id="page-footer">
