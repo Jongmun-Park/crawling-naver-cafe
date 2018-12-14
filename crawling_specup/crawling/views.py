@@ -36,13 +36,12 @@ def data_list(request):
     if(input_date == custom_today):     # 오늘 날짜를 검색했을 경우
         while(True):
             search_page += 1        # 1페이지씩 늘려가며 크롤링
-            print('page:', search_page, clubid, menuid)
             params['search.page'] = search_page     # 검색할 페이지 params 사전에 담기
             soup = browser.open(list_url, params=params).soup   # 요청 받은 카페의 게시판 목록 접속
             for tag in soup.select('.board_box'):   # li 태그의 클래스 네임 board_box로 접근
                 write_date = tag.find(class_='time').text   # 게시 날짜 추출
                 if len(write_date) == 5:    # 오늘 날짜 데이터 판별
-                    data_list.append(crawling_data(tag, list_url, browser))
+                    data_list.append(crawling_data(tag, list_url, browser, clubid))
                 else:   # 검색 끝
                     json_dict['data_list'] = data_list
                     json_dict['msg'] = '검색이 완료됐습니다.'
@@ -52,7 +51,6 @@ def data_list(request):
         correct = False
         while(True):
             search_page += 1
-            print('page:', search_page, clubid, menuid)
             params['search.page'] = search_page
             soup = browser.open(list_url, params=params).soup
             if not soup.select('.board_box'):   # 검색 결과가 없는 경우 (맨 마지막 페이지까지 검색한 후)
@@ -63,7 +61,7 @@ def data_list(request):
                     write_date = tag.find(class_='time').text
                     if input_date == write_date:    # 검색 값을 찾은 경우
                         correct = True
-                        data_list.append(crawling_data(tag, list_url, browser))
+                        data_list.append(crawling_data(tag, list_url, browser, clubid))
                     elif correct == True:   # 검색 끝
                         json_dict['data_list'] = data_list
                         json_dict['msg'] = '검색이 완료됐습니다.'
@@ -75,7 +73,7 @@ def data_list(request):
 
 
 # 데이터 크롤링 함수
-def crawling_data(tag, list_url, browser):
+def crawling_data(tag, list_url, browser, clubid):
     data_dict = {}
     title = tag.find("strong", class_='tit').text.strip()
     data_dict['title'] = title
@@ -88,26 +86,45 @@ def crawling_data(tag, list_url, browser):
             compile_title = re.compile('^.*[★|\[](.*)[★|\]].*$')
             match_company = compile_title.match(title)
             company_name = match_company.group(1)
-        except (AttributeError, IndexError) as err:          # 'NoneType' object has no attribute 'group' 에러 체크
-            print('CompanyError: {0}'.format(err))
+        except (AttributeError, IndexError) as err:          # 'NoneType' object has no attribute 'group' // list index out of range 에러 체크
+            print('Attri or Index CompanyError: {0}'.format(err))
             company_name = ''
         try:
-            date = article_soup.select('div.NHN_Writeform_Main div > span > b > span')[0].text
-            job_sort = article_soup.select('div.NHN_Writeform_Main div > span > b > span')[1].text
-            # print(title, '!!!!!!date:', date, 'job_sort:', job_sort)
-            compile_date = re.compile('^(.*)[~]\s(.*)$')
+            select_article = article_soup.select('div.NHN_Writeform_Main > div > div')
+            if(clubid=='15754634'): # 스펙업 카페일 경우
+                date = select_article[3].text
+                job_sort = select_article[4].text
+                employ_sort = select_article[5].text
+            else:   # 공취사 카페일 경우
+                date = select_article[2].text
+                job_sort = select_article[3].text
+                employ_sort = select_article[4].text
+
+            compile_date = re.compile('^.*[:](.*)[~]\s(.*)$')
+            complie_sort = re.compile('^.*[:](.*)$')
+            
             match_date = compile_date.match(date)
+            match_job_sort = complie_sort.match(job_sort)
+            match_employ_sort = complie_sort.match(employ_sort)
+            
             start_date = match_date.group(1)
             end_date = match_date.group(2)
-        except (AttributeError, IndexError) as err:          # 'NoneType' object has no attribute 'group' 에러 체크
-            print('DateError: {0}'.format(err))
+            job = match_job_sort.group(1)
+            employ = match_employ_sort.group(1)
+
+        except (AttributeError, IndexError) as err:          # 'NoneType' object has no attribute 'group' // list index out of range 에러 체크
+            print('Attri or Index Error: {0}'.format(err))
             start_date = ''
             end_date = ''
-            job_sort = ''
-        data_dict['job_sort'] = job_sort
+            job = ''
+            employ = ''
+
         data_dict['company'] = company_name
         data_dict['start_date'] = start_date
         data_dict['end_date'] = end_date
+        data_dict['job_sort'] = job
+        data_dict['employ_sort'] = employ
+
     except TypeError as err:       # 해당 날짜에 검색 결과 없을 때
         print('TypeError: {0}'.format(err))
 

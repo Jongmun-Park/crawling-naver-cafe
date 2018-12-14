@@ -18,32 +18,45 @@
     <![endif]-->
     <script>
         $(document).ready(function(){
+            $('#clubid').click(function(){
+                $('#menuid').val(1);
+                menu_click();
+            }) // 카페 선택 클릭시 
             $('#menuid').click(function(){
+                menu_click();
+            })  // 게시판 선택 클릭시
+            
+        }) // document ready 끝
+
+        var menu_click = function(){
                 $('#menuid').empty();      // 출력 누적 방지
                 if($('#clubid').val()=='15754634'){            // 스펙업 선택시
-                    specup_menu = '<option value="1481">공채속보</option><option value="6934">경영/인사/사무/회계</option>' +
+                    specup_menu = '<option value=1>카페를 선택하세요.</option><option value="1481">공채속보</option><option value="6934">경영/인사/사무/회계</option>' +
                                   '<option value="6935">기획/마케팅/영업</option><option value="6937">IT/연구/개발</option>' +
                                   '<option value="6936">생산/기계/건설</option>';
                 }
                 else if($('#clubid').val()=='13360696'){       // 공취사 선택시
-                    specup_menu = '<option value="2255">중앙공기업</option><option value="5652">지방공기업</option>' +
+                    specup_menu = '<option value=1>카페를 선택하세요.</option><option value="2255">중앙공기업</option><option value="5652">지방공기업</option>' +
                                   '<option value="4216">인턴/계약직</option><option value="4215">교직/기타기관</option>' +
                                   '<option value="6359">석박사/병원직</option>';
                 }
                 $('#menuid').append(specup_menu);
-
-            })  // 메뉴 선택 클릭시
-            
-        }) // document ready 끝
+        }   // menu_click
 
         var ajax_count = 0;
         var dataList = function(){
             var year = $('#year').val();
+            var year_check = /^201\d{1}$/;
             var month = $('#month').val();
+            var month_check = /^0[1-9]|1[012]$/;
             var day = $('#day').val();
+            var day_check = /^0[1-9]|[12][0-9]|3[0-1]$/;
             var menuid = $('#menuid').val();
             if(year=='' || month=='' || day=='' || menuid==1){  // 모든 값 입력여부 확인
                 alert('모든 값을 입력 바랍니다.');
+            }
+            else if (!year_check.test(year) || !month_check.test(month) || !day_check.test(day)){
+                alert('잘못된 날짜입니다. 다시 입력해주세요~\n2010년부터 검색 가능합니다.')
             }
             else{   // 입력 확인되면 크롤링 요청
                 if(ajax_count==0){      // 검색 중복 방지
@@ -68,7 +81,7 @@
                             $.each(results.data_list, function(index, data){
                                 strBody += '<tr><td>' + data.title + '</td><td>' + data.writer + '</td><td>' + data.article_url + '</td>' +
                                         '<td>' + data.company + '</td><td>' + data.start_date + '</td><td>' + data.end_date + 
-                                        '</td><td>' + data.job_sort + '</td></tr>';       
+                                        '</td><td>' + data.job_sort + '</td><td>' + data.employ_sort + '</td></tr>';       
                                     
                             }) // each
 
@@ -76,7 +89,7 @@
                             $('#center_div').html('검색 결과가 없습니다.')
                             }
                             else{
-                            $('#center_div').html(year+'.'+month+'.'+day+'의 검색 결과입니다.')
+                            $('#center_div').html(year+'년 '+month+'월 '+day+'일의 검색 결과입니다.')
                             $('#listHead').append(strHead);
                             $('#listBody').append(strBody);
                             }
@@ -134,7 +147,7 @@
                 </select> &emsp;&emsp;&emsp;
                 게시판 선택 :
                 <select id="menuid" name='menuid'>
-                    <option value = 1>카페를 선택하세요.</option>
+                    <option value=1>카페를 선택하세요.</option>
                 </select>
                 <hr>
                 <input type="text" id="year" placeholder="ex) 2019">&nbsp;년&emsp;
