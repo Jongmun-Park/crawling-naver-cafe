@@ -7,10 +7,10 @@ import datetime
 # from django.contrib import messages
 
 def main_view(request):
-    browser = mechanicalsoup.StatefulBrowser()
-    browser.open('https://nid.naver.com/nidlogin.login')      # 네이버 로그인 #
-    browser.select_form('form#frmNIDLogin')                   # 네이버 로그인을 해야 게시글 내부의 정보를 크롤링할 수 있음
-    browser.launch_browser()                                  # 일회용 로그인 방법으로 한 번만 로그인하면 됨
+    # browser = mechanicalsoup.StatefulBrowser()
+    # browser.open('https://nid.naver.com/nidlogin.login')      # 네이버 로그인 #
+    # browser.select_form('form#frmNIDLogin')                   # 네이버 로그인을 해야 게시글 내부의 정보를 크롤링할 수 있음
+    # browser.launch_browser()                                  # 일회용 로그인 방법으로 한 번만 로그인하면 됨
     return render(request, 'main.html')
     
 def data_list(request):
