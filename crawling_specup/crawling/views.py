@@ -80,8 +80,10 @@ def crawling_data(tag, list_url, browser, clubid):
     data_dict['writer'] = tag.find(class_='ellip').text
     try:
         article_url = urljoin(list_url, tag.find('a')['href'])
-        data_dict['article_url'] = article_url
         article_soup = browser.open(article_url).soup
+        for tag in article_soup.select('div.footer_fix'):
+            post_href = tag.find(id='spiButton')['data-url']    # 상세 URL 가져오는 코드
+        data_dict['article_url'] = post_href
         try:
             compile_title = re.compile('^.*[★|\[](.*)[★|\]].*$')
             match_company = compile_title.match(title)

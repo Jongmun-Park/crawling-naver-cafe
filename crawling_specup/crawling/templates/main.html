@@ -18,13 +18,10 @@
     <![endif]-->
     <script>
         $(document).ready(function(){
-            $('#clubid').click(function(){
-                $('#menuid').val(1);
+            menu_click();
+            $('#clubid').change(function(){
                 menu_click();
-            }) // 카페 선택 클릭시 
-            $('#menuid').click(function(){
-                menu_click();
-            })  // 게시판 선택 클릭시
+            });
             
         }) // document ready 끝
 
